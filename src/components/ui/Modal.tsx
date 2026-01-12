@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,8 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children, className, zIndex = 50 }: ModalProps) {
+  const scrollableRef = useRef<HTMLDivElement>(null);
+
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
   }, [onClose]);
@@ -22,13 +24,31 @@ export function Modal({ isOpen, onClose, title, children, className, zIndex = 50
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
+      // Lock body scroll
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
     }
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      // Restore body scroll
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     };
   }, [isOpen, handleEscape]);
+
+  // Prevent touch move on backdrop from scrolling background
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+  }, []);
 
   return (
     <AnimatePresence>
@@ -40,7 +60,8 @@ export function Modal({ isOpen, onClose, title, children, className, zIndex = 50
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50"
+            onTouchMove={handleTouchMove}
+            className="fixed inset-0 bg-black/50 touch-none"
             style={{ zIndex }}
           />
           
@@ -74,7 +95,11 @@ export function Modal({ isOpen, onClose, title, children, className, zIndex = 50
               )}
               
               {/* Content */}
-              <div className="p-4 overflow-y-auto flex-1 overscroll-contain pb-safe">
+              <div 
+                ref={scrollableRef}
+                className="p-4 overflow-y-auto flex-1 overscroll-contain pb-safe"
+                style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+              >
                 {children}
               </div>
             </div>
