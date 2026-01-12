@@ -64,8 +64,12 @@ export default function SetupPage() {
       if (profileError) throw profileError;
 
       setGeneratedCode(newCode);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } catch (err: unknown) {
+      console.error('Create couple error:', err);
+      const errorMessage = err instanceof Error ? err.message : 
+        (typeof err === 'object' && err !== null && 'message' in err) ? String((err as { message: unknown }).message) : 
+        'Something went wrong';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -113,8 +117,12 @@ export default function SetupPage() {
       if (profileError) throw profileError;
 
       router.push('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } catch (err: unknown) {
+      console.error('Join couple error:', err);
+      const errorMessage = err instanceof Error ? err.message : 
+        (typeof err === 'object' && err !== null && 'message' in err) ? String((err as { message: unknown }).message) : 
+        'Something went wrong';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
