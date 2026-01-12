@@ -17,10 +17,13 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    // Use production URL from env, fallback to current origin for local dev
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${siteUrl}/auth/callback`,
       },
     });
 
