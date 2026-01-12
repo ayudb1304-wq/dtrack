@@ -5,6 +5,7 @@ import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { Check, Clock, Trash2, Edit2 } from 'lucide-react';
 import { cn, formatDateTime, getRelativeTime, categoryConfig } from '@/lib/utils';
 import type { DateEntry } from '@/types/database';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface DateCardProps {
   date: DateEntry;
@@ -15,11 +16,12 @@ interface DateCardProps {
 
 export function DateCard({ date, onComplete, onDelete, onEdit }: DateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const x = useMotionValue(0);
   const background = useTransform(
     x,
     [-100, 0, 100],
-    ['#EF4444', '#FFFFFF', '#22C55E']
+    date.is_completed ? ['#EF4444', '#FFFFFF', '#FFFFFF'] : ['#EF4444', '#FFFFFF', '#22C55E']
   );
   const deleteOpacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
   const completeOpacity = useTransform(x, [0, 50, 100], [0, 0.5, 1]);
@@ -31,10 +33,17 @@ export function DateCard({ date, onComplete, onDelete, onEdit }: DateCardProps) 
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (info.offset.x < -80 && onDelete) {
-      setIsDeleting(true);
-      setTimeout(() => onDelete(date.id), 200);
+      // Show confirmation dialog instead of deleting immediately
+      setShowDeleteConfirm(true);
     } else if (info.offset.x > 80 && onComplete && !date.is_completed) {
       onComplete(date.id);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (onDelete) {
+      setIsDeleting(true);
+      setTimeout(() => onDelete(date.id), 200);
     }
   };
 
@@ -50,30 +59,38 @@ export function DateCard({ date, onComplete, onDelete, onEdit }: DateCardProps) 
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl">
-      {/* Background actions */}
-      <div className="absolute inset-0 flex items-center justify-between px-6">
-        <motion.div style={{ opacity: deleteOpacity }} className="flex items-center gap-2 text-white">
-          <Trash2 className="w-5 h-5" />
-          <span className="text-sm font-medium">Delete</span>
-        </motion.div>
-        {!date.is_completed && (
-          <motion.div style={{ opacity: completeOpacity }} className="flex items-center gap-2 text-white">
-            <span className="text-sm font-medium">Complete</span>
-            <Check className="w-5 h-5" />
+    <>
+      <div className="relative overflow-hidden rounded-2xl">
+        {/* Background actions */}
+        <div className="absolute inset-0 flex items-center justify-between px-6">
+          <motion.div style={{ opacity: deleteOpacity }} className="flex items-center gap-2 text-white">
+            <Trash2 className="w-5 h-5" />
+            <span className="text-sm font-medium">Delete</span>
           </motion.div>
-        )}
-      </div>
+          {!date.is_completed && (
+            <motion.div style={{ opacity: completeOpacity }} className="flex items-center gap-2 text-white">
+              <span className="text-sm font-medium">Complete</span>
+              <Check className="w-5 h-5" />
+            </motion.div>
+          )}
+        </div>
 
-      {/* Card */}
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
-        onDragEnd={handleDragEnd}
-        style={{ x, backgroundColor: background }}
-        className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-4 cursor-grab active:cursor-grabbing"
-      >
+        {/* Card */}
+        <motion.div
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.1}
+          dragDirectionLock
+          onDrag={(_, info) => {
+            // Prevent right swipe for completed dates
+            if (date.is_completed && info.offset.x > 0) {
+              x.set(0);
+            }
+          }}
+          onDragEnd={handleDragEnd}
+          style={{ x, backgroundColor: background }}
+          className="relative bg-white rounded-2xl shadow-sm border border-gray-100 p-4 cursor-grab active:cursor-grabbing"
+        >
         <div className="flex items-start gap-4">
           {/* Category Badge */}
           <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center text-2xl', config.color)}>
@@ -121,11 +138,28 @@ export function DateCard({ date, onComplete, onDelete, onEdit }: DateCardProps) 
           </div>
         </div>
 
-        {/* Swipe hint */}
-        <div className="text-center text-xs text-gray-300 mt-3">
-          ← swipe to delete • swipe to complete →
-        </div>
-      </motion.div>
-    </div>
+          {/* Swipe hint */}
+          <div className="text-center text-xs text-gray-300 mt-3">
+            {date.is_completed ? (
+              '← swipe to delete'
+            ) : (
+              '← swipe to delete • swipe to complete →'
+            )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Delete Confirmation Dialog - Outside overflow container */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Date"
+        message={`Are you sure you want to delete "${date.title}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Keep it"
+        variant="danger"
+      />
+    </>
   );
 }
