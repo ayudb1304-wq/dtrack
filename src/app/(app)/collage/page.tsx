@@ -1,10 +1,10 @@
-import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { createClient } from '@/utils/supabase/server';
-import { getCoupleInfo, getDates } from '@/lib/actions/dates';
-import { DashboardClient } from './(app)/DashboardClient';
+import { getCompletedDates, getCoupleInfo } from '@/lib/actions/dates';
+import { CollageClient } from './CollageClient';
+import { redirect } from 'next/navigation';
 
-export default async function HomePage() {
+export default async function CollagePage() {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   
@@ -14,8 +14,8 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  const [dates, coupleInfo] = await Promise.all([
-    getDates(),
+  const [completedDates, coupleInfo] = await Promise.all([
+    getCompletedDates(),
     getCoupleInfo(),
   ]);
 
@@ -24,8 +24,8 @@ export default async function HomePage() {
   }
 
   return (
-    <DashboardClient 
-      initialDates={dates} 
+    <CollageClient 
+      initialDates={completedDates}
       coupleInfo={coupleInfo}
     />
   );
