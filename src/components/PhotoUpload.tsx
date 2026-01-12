@@ -13,10 +13,59 @@ interface PhotoUploadProps {
   className?: string;
 }
 
+// Compress image on client side before upload
+async function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement('img');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    img.onload = () => {
+      // Calculate new dimensions
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      if (!ctx) {
+        reject(new Error('Could not get canvas context'));
+        return;
+      }
+
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Failed to compress image'));
+          }
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export function PhotoUpload({ value, onChange, className }: PhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
@@ -25,26 +74,37 @@ export function PhotoUpload({ value, onChange, className }: PhotoUploadProps) {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image must be less than 10MB');
       return;
     }
 
     setUploading(true);
     setError('');
+    setUploadProgress('Compressing...');
 
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      // Compress image before uploading
+      const compressedFile = await compressImage(file);
+      
+      setUploadProgress('Uploading...');
+      
+      const formData = new FormData();
+      formData.append('file', compressedFile);
 
-    const result = await uploadPhoto(formData);
+      const result = await uploadPhoto(formData);
 
-    if (result.url) {
-      onChange(result.url);
-    } else {
-      setError(result.error || 'Failed to upload');
+      if (result.url) {
+        onChange(result.url);
+      } else {
+        setError(result.error || 'Failed to upload');
+      }
+    } catch {
+      setError('Failed to process image');
     }
 
     setUploading(false);
+    setUploadProgress('');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +176,12 @@ export function PhotoUpload({ value, onChange, className }: PhotoUploadProps) {
             )}
           >
             {uploading ? (
-              <Loader2 className="w-8 h-8 text-rose-400 animate-spin" />
+              <div className="flex flex-col items-center">
+                <Loader2 className="w-8 h-8 text-rose-400 animate-spin" />
+                {uploadProgress && (
+                  <span className="text-xs text-gray-500 mt-2">{uploadProgress}</span>
+                )}
+              </div>
             ) : (
               <>
                 <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">

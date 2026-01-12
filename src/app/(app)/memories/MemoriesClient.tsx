@@ -2,11 +2,12 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Calendar, Heart, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Calendar, Heart, X, Edit2 } from 'lucide-react';
 import { useRealtimeDates } from '@/lib/hooks/useRealtimeDates';
 import { formatDate, categoryConfig } from '@/lib/utils';
 import type { DateEntry } from '@/types/database';
 import Image from 'next/image';
+import { EditMemoryModal } from '@/components/EditMemoryModal';
 
 interface MemoriesClientProps {
   initialDates: DateEntry[];
@@ -15,6 +16,7 @@ interface MemoriesClientProps {
 
 export function MemoriesClient({ initialDates, coupleId }: MemoriesClientProps) {
   const [selectedDate, setSelectedDate] = useState<DateEntry | null>(null);
+  const [editingMemory, setEditingMemory] = useState<DateEntry | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   
   const { completedDates } = useRealtimeDates(coupleId, initialDates);
@@ -164,13 +166,24 @@ export function MemoriesClient({ initialDates, coupleId }: MemoriesClientProps) 
               exit={{ opacity: 0, scale: 0.9 }}
               className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:max-h-[80vh] bg-white rounded-3xl overflow-hidden z-50 flex flex-col"
             >
-              {/* Close button */}
-              <button
-                onClick={() => setSelectedDate(null)}
-                className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
+              {/* Action buttons */}
+              <div className="absolute top-4 right-4 z-10 flex gap-2">
+                <button
+                  onClick={() => {
+                    setEditingMemory(selectedDate);
+                    setSelectedDate(null);
+                  }}
+                  className="w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
+                >
+                  <Edit2 className="w-5 h-5 text-white" />
+                </button>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
 
               {/* Photo */}
               <div className="relative aspect-square bg-gray-100">
@@ -213,6 +226,13 @@ export function MemoriesClient({ initialDates, coupleId }: MemoriesClientProps) 
           </>
         )}
       </AnimatePresence>
+
+      {/* Edit Memory Modal */}
+      <EditMemoryModal
+        isOpen={!!editingMemory}
+        onClose={() => setEditingMemory(null)}
+        date={editingMemory}
+      />
     </div>
   );
 }
