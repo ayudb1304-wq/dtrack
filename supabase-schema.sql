@@ -14,8 +14,14 @@ CREATE TABLE couples (
   created_at timestamptz DEFAULT now(),
   anniversary_date date,
   partner1_name text,
-  partner2_name text
+  partner2_name text,
+  profile_photo_url text
 );
+
+-- ============================================
+-- MIGRATION: Add profile_photo_url to existing couples table
+-- Run this if the table already exists:
+-- ALTER TABLE couples ADD COLUMN IF NOT EXISTS profile_photo_url text;
 
 -- Enable RLS on couples
 ALTER TABLE couples ENABLE ROW LEVEL SECURITY;

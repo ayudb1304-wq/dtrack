@@ -210,5 +210,6 @@ export async function getCoupleInfo() {
     anniversaryDate: couple?.anniversary_date,
     partner1Name: couple?.partner1_name,
     partner2Name: couple?.partner2_name,
+    profilePhotoUrl: couple?.profile_photo_url,
   };
 }

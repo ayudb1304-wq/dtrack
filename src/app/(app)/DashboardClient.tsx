@@ -7,6 +7,7 @@ import { DateCard } from '@/components/DateCard';
 import { RelationshipCounter } from '@/components/RelationshipCounter';
 import { AddDateModal } from '@/components/AddDateModal';
 import { CompleteModal } from '@/components/CompleteModal';
+import { CoupleProfilePhoto } from '@/components/CoupleProfilePhoto';
 import { useRealtimeDates } from '@/lib/hooks/useRealtimeDates';
 import { deleteDate } from '@/lib/actions/dates';
 import type { DateEntry } from '@/types/database';
@@ -19,6 +20,7 @@ interface DashboardClientProps {
     anniversaryDate?: string;
     partner1Name?: string;
     partner2Name?: string;
+    profilePhotoUrl?: string;
   };
 }
 
@@ -57,9 +59,11 @@ export function DashboardClient({ initialDates, coupleInfo }: DashboardClientPro
           <h1 className="text-2xl font-bold text-gray-800">Our Dates</h1>
           <p className="text-gray-500 text-sm mt-0.5">Plan something special</p>
         </div>
-        <div className="w-10 h-10 bg-gradient-to-br from-rose-400 to-rose-500 rounded-full flex items-center justify-center">
-          <Heart className="w-5 h-5 text-white fill-white" />
-        </div>
+        <CoupleProfilePhoto
+          photoUrl={coupleInfo.profilePhotoUrl}
+          partner1Name={coupleInfo.partner1Name}
+          partner2Name={coupleInfo.partner2Name}
+        />
       </div>
 
       {/* Relationship Counter */}
