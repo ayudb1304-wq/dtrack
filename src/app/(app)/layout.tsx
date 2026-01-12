@@ -14,8 +14,10 @@ export default function AppLayout({
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[var(--background)] pb-24">
-        {children}
+      <div className="min-h-screen bg-[var(--background)]">
+        <main className="pb-28">
+          {children}
+        </main>
         <BottomNav onAddClick={() => setShowAddModal(true)} />
         <AddDateModal 
           isOpen={showAddModal} 

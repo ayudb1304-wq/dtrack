@@ -32,7 +32,16 @@ export function BottomNav({ onAddClick }: BottomNavProps) {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40 pb-safe">
+    <nav 
+      className="bg-white border-t border-gray-100 pb-safe"
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+      }}
+    >
       <div className="max-w-lg mx-auto px-4">
         <div className="flex items-center justify-around py-2 relative">
           {navItems.map((item, index) => {
