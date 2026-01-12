@@ -71,7 +71,7 @@ export function Modal({ isOpen, onClose, title, children, className, zIndex = 50
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:inset-x-auto"
+            className="fixed inset-x-0 bottom-20 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:inset-x-auto"
             style={{ zIndex: zIndex + 1 }}
           >
             <div
@@ -97,7 +97,7 @@ export function Modal({ isOpen, onClose, title, children, className, zIndex = 50
               {/* Content */}
               <div 
                 ref={scrollableRef}
-                className="p-4 overflow-y-auto flex-1 overscroll-contain pb-safe"
+                className="p-4 pb-24 md:pb-4 overflow-y-auto flex-1 overscroll-contain"
                 style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
               >
                 {children}
